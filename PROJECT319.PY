@@ -36,11 +36,11 @@ def Authentication(username, password):
 
         if Authentication(username, password):
             messagebox.showinfo("Login Successful", f"Welcome, {username}!")
-            main_window()
+         # WE HAVE TO CALL FUNCTION THT HAS MAIN PROGRAM
             login.destroy()
         else:
             messagebox.showerror("Error", "Invalid credentials")
-
+         # HERE REGISTER FUNCTION  HAS TO BE CALLING HERE 
     login = tk.Tk()
     login.title("Secure File Storage - Login")
     login.geometry("300x200")
