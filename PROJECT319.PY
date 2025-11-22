@@ -27,7 +27,33 @@ def Authentication(username, password):
             if username == stored_username and hashed_pass == stored_hashed_pass:
                 messagebox.showinfo("Success", "Login Successful!")
                 return True
-
     messagebox.showerror("Error", "Invalid username or password!")
     return False
-            
+ def login_window():
+    def login_action():
+        username = entry_user.get()
+        password = entry_pass.get()
+
+        if Authentication(username, password):
+            messagebox.showinfo("Login Successful", f"Welcome, {username}!")
+            main_window()
+            login.destroy()
+        else:
+            messagebox.showerror("Error", "Invalid credentials")
+
+    login = tk.Tk()
+    login.title("Secure File Storage - Login")
+    login.geometry("300x200")
+
+    tk.Label(login, text="Username:").pack(pady=5)
+    entry_user = tk.Entry(login)
+    entry_user.pack()
+
+    tk.Label(login, text="Password:").pack(pady=5)
+    entry_pass = tk.Entry(login, show="*")
+    entry_pass.pack()
+
+    tk.Button(login, text="Login", command=login_action).pack(pady=10)
+    tk.Button(login, text="Register", command=open_register).pack(pady=5)
+    login.mainloop()    
+
