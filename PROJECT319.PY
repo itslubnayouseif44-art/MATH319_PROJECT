@@ -1,6 +1,5 @@
 import tkinter
 from tkinter import messagebox
-from tkinter import filedialog
 import hashlib
 import os
 
