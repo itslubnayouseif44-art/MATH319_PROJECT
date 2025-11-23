@@ -28,7 +28,6 @@ def authentication(username, password):
                 return True
     return False
 
-# ----------------- نافذة تسجيل الدخول -----------------
 def login_window():
 
     def login_action():
