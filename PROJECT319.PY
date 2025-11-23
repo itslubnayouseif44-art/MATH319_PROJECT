@@ -66,3 +66,16 @@ def register_window():
         registration(username, password)
 
     register_win = tkinter.Toplevel()
+    register_win.title("Secure File Storage - Register")
+    register_win.geometry("300x200")
+
+    tkinter.Label(register_win, text="Username:").pack(pady=5)
+    entry_user = tkinter.Entry(register_win)
+    entry_user.pack()
+
+    tkinter.Label(register_win, text="Password:").pack(pady=5)
+    entry_pass = tkinter.Entry(register_win, show="*")
+    entry_pass.pack()
+
+    tkinter.Button(register_win, text="Register", command=register_action).pack(pady=5)
+
