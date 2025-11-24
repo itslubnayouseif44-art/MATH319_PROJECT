@@ -2,6 +2,10 @@ import tkinter
 from tkinter import messagebox
 import hashlib
 import os
+from Crypto.Protocol.KDF import PBKDF2
+from Crypto.cipher import AES
+from Crypto.Random imprt get_random_bytes
+from Crypto.Util.Padding import pad, unpad
 
 USERS_FILE = "user.txt"
 
@@ -78,3 +82,29 @@ def register_window():
 
     tkinter.Button(register_win, text="Register", command=register_action).pack(pady=5)
 
+#Encrypt files
+def encryption(input_file, output_file, password):
+  salt = get_random_bytes(16)
+  key = PBKDF2(password.encode('utf-8'), salt, dkLen=32, count=1000000)
+  iv = ov.urandom(16)
+  cipher = AES.new(key, AES.MODE_CBC, iv)
+
+  try:
+    with open(input_file, 'rb') as inputFile, open(output_file, 'wb') as outputFile:
+     while True:
+
+      chunk = inputFile.read(4096)
+
+      if len(chunk) = 0:
+       break
+
+      if len(chunk) < 4096:
+       chunk = pad(chunck, 16)
+
+      cipherText = cipher.encrypt(chunk)
+      outputFile.write(cipherText)
+
+  except: FileNotFoundError:
+    print("File not found / doesn't exist")
+
+   
