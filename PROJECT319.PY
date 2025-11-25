@@ -166,4 +166,21 @@ def encrypt_file():
               else:
                 messagebox.showerror("Error","Password is required for encryption!")
        else:
-            messagebox.showerror("Error","No file selected for encryption!")            
+            messagebox.showerror("Error","No file selected for encryption!") 
+
+def decrypt_file():
+    def perform_decryption():
+        input_File=filedialog.askopenfilename(title="Select File to Decrypt")
+        if input_File:
+            password=simpledialog.askstring("password","Enter Password for Decryption:",show='*')
+            if password:
+                if input_File.endswith(".enc"):
+                    output_File=input_File[:-4]+".dec"
+                else:
+                    output_File=input_File+".dec"
+                decryption(input_File,output_File,password)
+                messagebox.showinfo("Success","File Decrypted Successfully!"+ output_File)
+            else:
+                messagebox.showerror("Error","Password is required for decryption!")
+        else:
+            messagebox.showerror("Error","No file selected for decryption!")                        
