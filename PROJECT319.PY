@@ -84,65 +84,65 @@ def register_window():
 
 #Encrypt files
 def encryption(input_file, output_file, password):
-  salt = get_random_bytes(16)
-  key = PBKDF2(password.encode('utf-8'), salt, dkLen=32, count=1000000)
-  iv = ov.urandom(16)
-  cipher = AES.new(key, AES.MODE_CBC, iv)
+    salt = get_random_bytes(16)
+    key = PBKDF2(password.encode('utf-8'), salt, dkLen=32, count=100000)
+    iv = os.urandom(16)
+    cipher = AES.new(key, AES.MODE_CBC, iv)
 
-  try:
-    with open(input_file, 'rb') as inputFile, open(output_file, 'wb') as outputFile:
-     while True:
+    try:
+        with open(input_file, 'rb') as inputFile, open(output_file, 'wb') as outputFile:
+            
+            # Write salt + IV to encrypted file
+            outputFile.write(salt)
+            outputFile.write(iv)
+            
+            while True:
+                chunk = inputFile.read(4096)
 
-      chunk = inputFile.read(4096)
+                if len(chunk) == 0:
+                    break
 
-      if len(chunk) = 0:
-       break
+                if len(chunk) < 4096:
+                    chunk = pad(chunk, 16)
 
-      if len(chunk) < 4096:
-       chunk = pad(chunck, 16)
+                cipherText = cipher.encrypt(chunk)
+                outputFile.write(cipherText)
 
-      cipherText = cipher.encrypt(chunk)
-      outputFile.write(cipherText)
-
-  except: FileNotFoundError:
-    print("File not found / doesn't exist")
+    except FileNotFoundError:
+        print("File not found!")
 
 
 #Decrypt files
 def decryption(input_file, output_file, password):
-  try:
-    with open(input_file,'rb') as inputFile
-     salt = inputFile.read(16)
-     if len(salt) != 16:
-         raise ValueError("Invalid file: Salt is missing or incomplete.")
-         
-    iv = inputFile.read(16)
-    if len(iv) != 16:
-        raise ValueError("Invalid file: IV is missing or incomplete")
-        
-    key = PBKDF2(password.encode('utf-8'), salt, dkLen=32, count=1000000)
-    
-    AESchiper = AES.new(key, AES.MODE_CBC, iv)
-    
-    with open(output_file, 'wb') as outputFile:
-        
-        while True:
-            chunk = inputFile.read(4096)
-            
-            if len(chunk) == 0:
-                break
-        
-        decrypted_chunk = AESchiper.decrypt(chunk)
-        
-        if inputFile.tell() == os.path.getsize(input_file):
-            decrypted_chunk = unpad(decrypted_chunk, 16)
-        
-        outputFile.Write(decrypted_chunk)
-    
+    try:
+        with open(input_file,'rb') as inputFile:
+            # Read salt and IV
+            salt = inputFile.read(16)
+            iv = inputFile.read(16)
+
+            if len(salt) != 16 or len(iv) != 16:
+                raise ValueError("Invalid encrypted file format!")
+
+            key = PBKDF2(password.encode('utf-8'), salt, dkLen=32, count=100000)
+            cipher = AES.new(key, AES.MODE_CBC, iv)
+
+            with open(output_file, 'wb') as outputFile:
+                while True:
+                    chunk = inputFile.read(4096)
+                    if len(chunk) == 0:
+                        break
+
+                    decrypted_chunk = cipher.decrypt(chunk)
+
+                    # Check if this is the last chunk
+                    if inputFile.tell() == os.path.getsize(input_file):
+                        decrypted_chunk = unpad(decrypted_chunk, 16)
+
+                    outputFile.write(decrypted_chunk)
+
     except FileNotFoundError:
         print("File not found!")
     except ValueError as e:
-        print(f"Decryption error: {e}")
-        raise SystemExit(1)
+        print("Decryption error:", e)
     
     
