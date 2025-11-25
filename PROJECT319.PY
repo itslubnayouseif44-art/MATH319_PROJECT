@@ -7,7 +7,7 @@ from Crypto.cipher import AES
 from Crypto.Random import get_random_bytes
 from Crypto.Util.Padding import pad, unpad
 
-USERS_FILE = "user.text"
+USERS_FILE = "user.txt"
 
 def registration(username, password):
     if not username or not password:
@@ -167,7 +167,7 @@ def encrypt_file():
        else:
             messagebox.showerror("Error","No file selected for encryption!")
 
-def decrypt_file()::
+def decrypt_file():
         input_File=filedialog.askopenfilename(title="Select File to Decrypt")
         if input_File:
             password=simpledialog.askstring("password","Enter Password for Decryption:",show='*')
