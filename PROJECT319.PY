@@ -39,6 +39,7 @@ def login_window():
         if authentication(username, password):
             messagebox.showinfo("Login Successful", f"Welcome, {username}!")
             login.destroy()
+            dashboard_window(username)
         else:
             messagebox.showerror("Error", "Invalid credentials")
 
@@ -145,4 +146,24 @@ def decryption(input_file, output_file, password):
     except ValueError as e:
         print("Decryption error:", e)
     
-    
+ def dashboard_window(username):
+    dash=tkinter.Toplevel()
+    dash.title("Secure File Storage"+username)
+    dash.geometry("300X200")
+
+    dash.lablel(dash,text="Encrypt File",command=encrypt_file).pack(pady=10)
+    dash.lablel(dash,text="Decrypt File",command=decrypt_file).pack(pady=10)
+
+def encrypt_file():
+    def perform_encryption():
+       input_File=filedialog.askopenfilename(title="Select File to Encrypt")
+       if input_File:
+              password=simpledialog.askstring("Password","Enter Password for Encryption:",show='*') 
+              if password:
+               output_File=input_File+".enc"
+               encryption(input_File,output_File,password)
+               messagebox.showinfo("Success","File Encrypted Successfully!"+ output_File)
+              else:
+                messagebox.showerror("Error","Password is required for encryption!")
+       else:
+            messagebox.showerror("Error","No file selected for encryption!")            
