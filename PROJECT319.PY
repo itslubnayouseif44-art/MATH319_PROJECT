@@ -1,10 +1,10 @@
 import tkinter
-from tkinter import messagebox
+from tkinter import messagebox, filedialog,simpledialog
 import hashlib
 import os
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.cipher import AES
-from Crypto.Random imprt get_random_bytes
+from Crypto.Random import get_random_bytes
 from Crypto.Util.Padding import pad, unpad
 
 USERS_FILE = "user.txt"
