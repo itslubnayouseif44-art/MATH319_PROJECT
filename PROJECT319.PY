@@ -1,5 +1,5 @@
 import tkinter
-from tkinter import messagebox, filedialog,simpledialog
+from tkinter import messagebox ,filedialog, simpledialog
 import hashlib
 import os
 from Crypto.Protocol.KDF import PBKDF2
@@ -146,13 +146,13 @@ def decryption(input_file, output_file, password):
     except ValueError as e:
         print("Decryption error:", e)
     
- def dashboard_window(username):
+def dashboard_window(username):
     dash=tkinter.Toplevel()
     dash.title("Secure File Storage"+username)
     dash.geometry("300X200")
 
-    dash.lablel(dash,text="Encrypt File",command=encrypt_file).pack(pady=10)
-    dash.lablel(dash,text="Decrypt File",command=decrypt_file).pack(pady=10)
+    tkinter.Button(dash,text="Encrypt File",command=encrypt_file).pack(pady=10)
+    tkinter.Button(dash,text="Decrypt File",command=decrypt_file).pack(pady=10)
 
 def encrypt_file():
     def perform_encryption():
@@ -166,7 +166,7 @@ def encrypt_file():
               else:
                 messagebox.showerror("Error","Password is required for encryption!")
        else:
-            messagebox.showerror("Error","No file selected for encryption!") 
+            messagebox.showerror("Error","No file selected for encryption!")
 
 def decrypt_file():
     def perform_decryption():
@@ -183,4 +183,4 @@ def decrypt_file():
             else:
                 messagebox.showerror("Error","Password is required for decryption!")
         else:
-            messagebox.showerror("Error","No file selected for decryption!")                        
+            messagebox.showerror("Error","No file selected for decryption!")  
