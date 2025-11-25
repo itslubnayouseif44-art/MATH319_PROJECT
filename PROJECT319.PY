@@ -107,4 +107,42 @@ def encryption(input_file, output_file, password):
   except: FileNotFoundError:
     print("File not found / doesn't exist")
 
-   
+
+#Decrypt files
+def decryption(input_file, output_file, password):
+  try:
+    with open(input_file,'rb') as inputFile
+     salt = inputFile.read(16)
+     if len(salt) != 16:
+         raise ValueError("Invalid file: Salt is missing or incomplete.")
+         
+    iv = inputFile.read(16)
+    if len(iv) != 16:
+        raise ValueError("Invalid file: IV is missing or incomplete")
+        
+    key = PBKDF2(password.encode('utf-8'), salt, dkLen=32, count=1000000)
+    
+    AESchiper = AES.new(key, AES.MODE_CBC, iv)
+    
+    with open(output_file, 'wb') as outputFile:
+        
+        while True:
+            chunk = inputFile.read(4096)
+            
+            if len(chunk) == 0:
+                break
+        
+        decrypted_chunk = AESchiper.decrypt(chunk)
+        
+        if inputFile.tell() == os.path.getsize(input_file):
+            decrypted_chunk = unpad(decrypted_chunk, 16)
+        
+        outputFile.Write(decrypted_chunk)
+    
+    except FileNotFoundError:
+        print("File not found!")
+    except ValueError as e:
+        print(f"Decryption error: {e}")
+        raise SystemExit(1)
+    
+    
