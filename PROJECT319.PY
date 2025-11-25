@@ -7,16 +7,16 @@ from Crypto.cipher import AES
 from Crypto.Random import get_random_bytes
 from Crypto.Util.Padding import pad, unpad
 
-USERS_FILE = "user.txt"
+USERS_FILE = "user.text"
 
 def registration(username, password):
     if not username or not password:
         messagebox.showerror("Error", "You Must Complete All Required Information")
-        return
+        return 
+
     hashed_pass = hashlib.sha256(password.encode()).hexdigest()
     with open(USERS_FILE, "a") as user:
-        user.write(username + "," + hashed_pass + "\n")
-    messagebox.showinfo("Success", "Registration Completed!")
+        user.write(username + "," + hashed_pass + "\n")  
 
 def authentication(username, password):
     if not os.path.exists(USERS_FILE):
@@ -148,14 +148,13 @@ def decryption(input_file, output_file, password):
     
 def dashboard_window(username):
     dash=tkinter.Toplevel()
-    dash.title("Secure File Storage"+username)
-    dash.geometry("300X200")
+    dash.title(f"Secure File Storage - {username}")
+    dash.geometry("300x200")
 
     tkinter.Button(dash,text="Encrypt File",command=encrypt_file).pack(pady=10)
     tkinter.Button(dash,text="Decrypt File",command=decrypt_file).pack(pady=10)
 
 def encrypt_file():
-    def perform_encryption():
        input_File=filedialog.askopenfilename(title="Select File to Encrypt")
        if input_File:
               password=simpledialog.askstring("Password","Enter Password for Encryption:",show='*') 
@@ -168,8 +167,7 @@ def encrypt_file():
        else:
             messagebox.showerror("Error","No file selected for encryption!")
 
-def decrypt_file():
-    def perform_decryption():
+def decrypt_file()::
         input_File=filedialog.askopenfilename(title="Select File to Decrypt")
         if input_File:
             password=simpledialog.askstring("password","Enter Password for Decryption:",show='*')
