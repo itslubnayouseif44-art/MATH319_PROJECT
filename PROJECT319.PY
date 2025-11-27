@@ -61,7 +61,7 @@ def login_window():
             messagebox.showwarning("Login Failed", "Incorrect username or password.")
 
     def open_register():
-        register_window()
+        register_window(login)
 
     login = tkinter.Tk()
     login.title("Secure File Storage - Login")
@@ -99,13 +99,17 @@ def login_window():
     login.mainloop()
 
 # REGISTRATION WINDOW 
-def register_window():
+def register_window(parent_root):
     def register_action():
         username = entry_user.get()
         password = entry_pass.get()
         registration(username, password)
         if username and password:
-            register_win.destroy()
+          register_win.destroy()
+          parent_root.withdraw()       
+          dashboard_window(username, parent_root)
+
+
 
     register_win = tkinter.Toplevel()
     register_win.title("Secure File Storage - Register")
