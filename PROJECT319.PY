@@ -1,5 +1,5 @@
 import tkinter
-from tkinter import messagebox ,filedialog, simpledialog
+from tkinter import messagebox, filedialog, simpledialog
 import hashlib
 import os
 from Crypto.Protocol.KDF import PBKDF2
@@ -7,22 +7,155 @@ from Crypto.Random import get_random_bytes
 from Crypto.Util.Padding import pad, unpad
 from Crypto.Cipher import AES
 
-USERS_FILE = "user.txt"
+USERS_FILE = "user.text"
 
+# _____________________________________ User Interface_______________________________________
+
+# DASHBOARD WINDOW 
+def dashboard_window(username, parent_root):
+    
+    dash = tkinter.Toplevel(parent_root)
+    dash.title(f"Secure File Storage - {username}")
+    dash.geometry("350x250")
+    dash.resizable(False, False)
+    dash.configure(bg="#FFF8EF")
+
+    tkinter.Label(dash, text=f"Welcome, {username}", font=("Arial", 14, "bold"), bg="#FFF8EF").pack(pady=15)
+
+    button_frame = tkinter.Frame(dash, bg="#FFF8EF")
+    button_frame.pack(pady=20)
+
+    tkinter.Button(button_frame, text="Encrypt File 🔒", width=20,
+                   command=encrypt_file, bg="#F4165C", fg="white",
+                   font=("Arial", 12)).grid(row=0, column=0, padx=10, pady=10)
+
+    tkinter.Button(button_frame, text="Decrypt File 🔓", width=20,
+                   command=decrypt_file, bg="#F4165C", fg="white",
+                   font=("Arial", 12)).grid(row=1, column=0, padx=10, pady=10)
+
+    def logout_action():
+       
+        parent_root.deiconify()
+
+    tkinter.Button(dash, text="Logout", width=12, command=logout_action,
+                   bg="#96d4af", fg="white", font=("Arial", 11)).pack(pady=5)
+
+    def on_close():
+        dash.destroy()
+        parent_root.deiconify()
+
+    dash.protocol("WM_DELETE_WINDOW", on_close)
+
+# LOGIN WINDOW 
+def login_window():
+    def login_action():
+        username = entry_user.get()
+        password = entry_pass.get()
+        if authentication(username, password):
+            messagebox.showinfo("Login Successful", f"Welcome, {username}!")
+           
+            login.withdraw()
+            
+            dashboard_window(username, login)
+        else:
+            messagebox.showwarning("Login Failed", "Incorrect username or password.")
+
+    def open_register():
+        register_window()
+
+    login = tkinter.Tk()
+    login.title("Secure File Storage - Login")
+    login.geometry("350x250")
+    login.configure(bg="#FFF8EF")
+
+    tkinter.Label(login, text="Login", font=("Arial", 16, "bold"), bg="#FFF8EF").pack(pady=10)
+
+    form_frame = tkinter.Frame(login, bg="#FFF8EF")
+    form_frame.pack(pady=10)
+
+    tkinter.Label(form_frame, text="Username:", font=("Arial", 12), bg="#FFF8EF").grid(row=0, column=0, padx=5, pady=5, sticky="e")
+    entry_user = tkinter.Entry(form_frame, font=("Arial", 12))
+    entry_user.grid(row=0, column=1, padx=5, pady=5)
+
+    tkinter.Label(form_frame, text="Password:", font=("Arial", 12), bg="#FFF8EF").grid(row=1, column=0, padx=5, pady=5, sticky="e")
+    entry_pass = tkinter.Entry(form_frame, show="*", font=("Arial", 12))
+    entry_pass.grid(row=1, column=1, padx=5, pady=5)
+
+    button_frame = tkinter.Frame(login, bg="#FFF8EF")
+    button_frame.pack(pady=15)
+
+    tkinter.Button(button_frame, text="Login", width=12, command=login_action,
+                   bg="#F4165C", fg="white", font=("Arial", 12)).grid(row=0, column=0, padx=10)
+
+    tkinter.Button(button_frame, text="Register", width=12, command=open_register,
+                   bg="#F4165C", fg="white", font=("Arial", 12)).grid(row=0, column=1, padx=10)
+
+      
+    def on_root_close():
+        if messagebox.askokcancel("Quit", "Do you want to quit?"):
+            login.destroy()
+
+    login.protocol("WM_DELETE_WINDOW", on_root_close)
+    login.mainloop()
+
+# REGISTRATION WINDOW 
+def register_window():
+    def register_action():
+        username = entry_user.get()
+        password = entry_pass.get()
+        registration(username, password)
+        if username and password:
+            register_win.destroy()
+
+    register_win = tkinter.Toplevel()
+    register_win.title("Secure File Storage - Register")
+    register_win.geometry("350x250")
+    register_win.resizable(False, False)
+    register_win.configure(bg="#FFF8EF")
+
+    tkinter.Label(register_win, text="Register", font=("Arial", 16, "bold"), bg="#FFF8EF").pack(pady=10)
+
+    form_frame = tkinter.Frame(register_win, bg="#FFF8EF")
+    form_frame.pack(pady=10)
+
+    tkinter.Label(form_frame, text="Username:", font=("Arial", 12), bg="#FFF8EF").grid(row=0, column=0, padx=5, pady=5, sticky="e")
+    entry_user = tkinter.Entry(form_frame, font=("Arial", 12))
+    entry_user.grid(row=0, column=1, padx=5, pady=5)
+
+    tkinter.Label(form_frame, text="Password:", font=("Arial", 12), bg="#FFF8EF").grid(row=1, column=0, padx=5, pady=5, sticky="e")
+    entry_pass = tkinter.Entry(form_frame, show="*", font=("Arial", 12))
+    entry_pass.grid(row=1, column=1, padx=5, pady=5)
+
+    tkinter.Button(register_win, text="Register", width=15, command=register_action,
+                   bg="#F4165C", fg="white", font=("Arial", 12)).pack(pady=15)
+
+ 
+# _____________________________________ User Authentication _______________________________________
+
+
+#  USER REGISTRATION
 def registration(username, password):
     if not username or not password:
-        messagebox.showerror("Error", "You Must Complete All Required Information")
-        return 
+        messagebox.showerror("Error", "You must complete all required information!")
+        return
+
+    if os.path.exists(USERS_FILE):
+        with open(USERS_FILE, "r") as user_file:
+            for line in user_file:
+                stored_username, _ = line.strip().split(",")
+                if username == stored_username:
+                    messagebox.showerror("Error", "Username already exists!")
+                    return
 
     hashed_pass = hashlib.sha256(password.encode()).hexdigest()
     with open(USERS_FILE, "a") as user:
-        user.write(username + "," + hashed_pass + "\n")  
+        user.write(username + "," + hashed_pass + "\n")
     messagebox.showinfo("Success", "Registration Successful!")
-    dashboard_window(username)
 
+#  USER AUTHENTICATION 
 def authentication(username, password):
     if not os.path.exists(USERS_FILE):
-        messagebox.showerror("Error", "No Users Registered Yet!")
+        messagebox.showerror("Error", "No users registered yet!")
         return False
 
     hashed_pass = hashlib.sha256(password.encode()).hexdigest()
@@ -33,59 +166,42 @@ def authentication(username, password):
                 return True
     return False
 
-def login_window():
+# _____________________________________ File Upload _______________________________________
 
-    def login_action():
-        username = entry_user.get()
-        password = entry_pass.get()
-        if authentication(username, password):
-            messagebox.showinfo("Login Successful", f"Welcome, {username}!")
-            login.destroy()
-            dashboard_window(username)
+# ENCRYPT FILE 
+def encrypt_file():
+    input_File = filedialog.askopenfilename(title="Select File to Encrypt")
+    if input_File:
+        password = simpledialog.askstring("Password", "Enter password for encryption:", show='*')
+        if password:
+            output_File = input_File + ".enc"
+            encryption(input_File, output_File, password)
+            messagebox.showinfo("Success", f"File encrypted successfully!\n{output_File}")
         else:
-         messagebox.showwarning("Registration Failed", "Please provide both username and password.")
-    def open_register():
-        register_window()
+            messagebox.showerror("Error", "Password is required for encryption!")
+    else:
+        messagebox.showerror("Error", "No file selected for encryption!")
 
-    login = tkinter.Tk()
-    login.title("Secure File Storage - Login")
-    login.geometry("300x200")
+# DECRYPT FILE 
+def decrypt_file():
+    input_File = filedialog.askopenfilename(title="Select File to Decrypt")
+    if input_File:
+        password = simpledialog.askstring("Password", "Enter password for decryption:", show='*')
+        if password:
+            if input_File.endswith(".enc"):
+                output_File = input_File[:-4] + ".dec"
+            else:
+                output_File = input_File + ".dec"
+            decryption(input_File, output_File, password)
+            messagebox.showinfo("Success", f"File decrypted successfully!\n{output_File}")
+        else:
+            messagebox.showerror("Error", "Password is required for decryption!")
+    else:
+        messagebox.showerror("Error", "No file selected for decryption!")
 
-    tkinter.Label(login, text="Username:").pack(pady=5)
-    entry_user = tkinter.Entry(login)
-    entry_user.pack()
+# _____________________________________  AES Encryption _______________________________________
 
-    tkinter.Label(login, text="Password:").pack(pady=5)
-    entry_pass = tkinter.Entry(login, show="*")
-    entry_pass.pack()
-
-    tkinter.Button(login, text="Login", command=login_action).pack(pady=10)
-    tkinter.Button(login, text="Register", command=open_register).pack(pady=5)
-
-    login.mainloop()
-
-def register_window():
-    def register_action():
-        username = entry_user.get()
-        password = entry_pass.get()
-        registration(username, password)
-    
-        register_win.destroy()
-    register_win = tkinter.Toplevel()
-    register_win.title("Secure File Storage - Register")
-    register_win.geometry("300x200")
-
-    tkinter.Label(register_win, text="Username:").pack(pady=5)
-    entry_user = tkinter.Entry(register_win)
-    entry_user.pack()
-
-    tkinter.Label(register_win, text="Password:").pack(pady=5)
-    entry_pass = tkinter.Entry(register_win, show="*")
-    entry_pass.pack()
-
-    tkinter.Button(register_win, text="Register", command=register_action).pack(pady=5)
-
-#Encrypt files
+# FILE ENCRYPTION 
 def encryption(input_file, output_file, password):
     salt = get_random_bytes(16)
     key = PBKDF2(password.encode('utf-8'), salt, dkLen=32, count=100000)
@@ -94,32 +210,26 @@ def encryption(input_file, output_file, password):
 
     try:
         with open(input_file, 'rb') as inputFile, open(output_file, 'wb') as outputFile:
-            
-            # Write salt + IV to encrypted file
             outputFile.write(salt)
             outputFile.write(iv)
-            
+
             while True:
                 chunk = inputFile.read(4096)
-
                 if len(chunk) == 0:
                     break
-
-                if len(chunk) < 4096:
+                if len(chunk) % 16 != 0:
                     chunk = pad(chunk, 16)
-
                 cipherText = cipher.encrypt(chunk)
                 outputFile.write(cipherText)
-
     except FileNotFoundError:
-        print("File not found!")
+        messagebox.showerror("Error", "File not found!")
 
+# _____________________________________  Retrieval and Decryption  _______________________________________
 
-#Decrypt files
+# FILE DECRYPTION 
 def decryption(input_file, output_file, password):
     try:
         with open(input_file,'rb') as inputFile:
-            # Read salt and IV
             salt = inputFile.read(16)
             iv = inputFile.read(16)
 
@@ -134,54 +244,16 @@ def decryption(input_file, output_file, password):
                     chunk = inputFile.read(4096)
                     if len(chunk) == 0:
                         break
-
                     decrypted_chunk = cipher.decrypt(chunk)
-
-                    # Check if this is the last chunk
                     if inputFile.tell() == os.path.getsize(input_file):
                         decrypted_chunk = unpad(decrypted_chunk, 16)
-
                     outputFile.write(decrypted_chunk)
-
     except FileNotFoundError:
-        print("File not found!")
+        messagebox.showerror("Error", "File not found!")
     except ValueError as e:
-        print("Decryption error:", e)
-    
-def dashboard_window(username):
-    dash=tkinter.Toplevel()
-    dash.title(f"Secure File Storage - {username}")
-    dash.geometry("300x200")
+        messagebox.showerror("Error", f"Decryption failed: {e}")
 
-    tkinter.Button(dash,text="Encrypt File",command=encrypt_file).pack(pady=10)
-    tkinter.Button(dash,text="Decrypt File",command=decrypt_file).pack(pady=10)
+# _____________________________________ RUN LOGIN   _______________________________________
 
-def encrypt_file():
-       input_File=filedialog.askopenfilename(title="Select File to Encrypt")
-       if input_File:
-              password=simpledialog.askstring("Password","Enter Password for Encryption:",show='*') 
-              if password:
-               output_File=input_File+".enc"
-               encryption(input_File,output_File,password)
-               messagebox.showinfo("Success","File Encrypted Successfully!"+ output_File)
-              else:
-                messagebox.showerror("Error","Password is required for encryption!")
-       else:
-            messagebox.showerror("Error","No file selected for encryption!")
-
-def decrypt_file():
-        input_File=filedialog.askopenfilename(title="Select File to Decrypt")
-        if input_File:
-            password=simpledialog.askstring("password","Enter Password for Decryption:",show='*')
-            if password:
-                if input_File.endswith(".enc"):
-                    output_File=input_File[:-4]+".dec"
-                else:
-                    output_File=input_File+".dec"
-                decryption(input_File,output_File,password)
-                messagebox.showinfo("Success","File Decrypted Successfully!"+ output_File)
-            else:
-                messagebox.showerror("Error","Password is required for decryption!")
-        else:
-            messagebox.showerror("Error","No file selected for decryption!")  
 login_window()
+
