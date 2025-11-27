@@ -1,23 +1,25 @@
 import tkinter
-from tkinter import messagebox
+from tkinter import messagebox ,filedialog, simpledialog
 import hashlib
 import os
 from Crypto.Protocol.KDF import PBKDF2
-from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 from Crypto.Util.Padding import pad, unpad
+from Crypto.Cipher import AES
 
-USERS_FILE = "user.txt"
+USERS_FILE = "user.text"
 
 def registration(username, password):
     if not username or not password:
         messagebox.showerror("Error", "You Must Complete All Required Information")
-        return
+        return 
+
     hashed_pass = hashlib.sha256(password.encode()).hexdigest()
     with open(USERS_FILE, "a") as user:
-        user.write(username + "," + hashed_pass + "\n")
-    messagebox.showinfo("Success", "Registration Completed!")
-
+        user.write(username + "," + hashed_pass + "\n")  
+    messagebox.showinfo("Success", "Registration Successful!")
+    dashboard_window(username)
+     
 def authentication(username, password):
     if not os.path.exists(USERS_FILE):
         messagebox.showerror("Error", "No Users Registered Yet!")
@@ -39,6 +41,7 @@ def login_window():
         if authentication(username, password):
             messagebox.showinfo("Login Successful", f"Welcome, {username}!")
             login.destroy()
+            dashboard_window(username)
         else:
             messagebox.showerror("Error", "Invalid credentials")
 
@@ -67,7 +70,8 @@ def register_window():
         username = entry_user.get()
         password = entry_pass.get()
         registration(username, password)
-
+    
+        register_win.destroy()
     register_win = tkinter.Toplevel()
     register_win.title("Secure File Storage - Register")
     register_win.geometry("300x200")
@@ -85,16 +89,17 @@ def register_window():
 #Encrypt files
 def encryption(input_file, output_file, password):
     salt = get_random_bytes(16)
-    key = PBKDF2(password.encode('utf-8'), salt, dkLen=32, count=1000000)
+    key = PBKDF2(password.encode('utf-8'), salt, dkLen=32, count=100000)
     iv = os.urandom(16)
     cipher = AES.new(key, AES.MODE_CBC, iv)
 
     try:
         with open(input_file, 'rb') as inputFile, open(output_file, 'wb') as outputFile:
-            # Write salt + iv at start
+            
+            # Write salt + IV to encrypted file
             outputFile.write(salt)
             outputFile.write(iv)
-
+            
             while True:
                 chunk = inputFile.read(4096)
 
@@ -108,36 +113,32 @@ def encryption(input_file, output_file, password):
                 outputFile.write(cipherText)
 
     except FileNotFoundError:
-        print("File not found / doesn't exist")
+        print("File not found!")
 
 
 #Decrypt files
 def decryption(input_file, output_file, password):
     try:
-        with open(input_file, 'rb') as inputFile:
-
+        with open(input_file,'rb') as inputFile:
+            # Read salt and IV
             salt = inputFile.read(16)
-            if len(salt) != 16:
-                raise ValueError("Invalid file: Salt is missing or incomplete.")
-
             iv = inputFile.read(16)
-            if len(iv) != 16:
-                raise ValueError("Invalid file: IV is missing or incomplete")
 
-            key = PBKDF2(password.encode('utf-8'), salt, dkLen=32, count=1000000)
+            if len(salt) != 16 or len(iv) != 16:
+                raise ValueError("Invalid encrypted file format!")
 
-            AEScipher = AES.new(key, AES.MODE_CBC, iv)
+            key = PBKDF2(password.encode('utf-8'), salt, dkLen=32, count=100000)
+            cipher = AES.new(key, AES.MODE_CBC, iv)
 
             with open(output_file, 'wb') as outputFile:
-
                 while True:
                     chunk = inputFile.read(4096)
-
                     if len(chunk) == 0:
                         break
 
-                    decrypted_chunk = AEScipher.decrypt(chunk)
+                    decrypted_chunk = cipher.decrypt(chunk)
 
+                    # Check if this is the last chunk
                     if inputFile.tell() == os.path.getsize(input_file):
                         decrypted_chunk = unpad(decrypted_chunk, 16)
 
@@ -146,5 +147,42 @@ def decryption(input_file, output_file, password):
     except FileNotFoundError:
         print("File not found!")
     except ValueError as e:
-        print(f"Decryption error: {e}")
-        raise SystemExit(1)
+        print("Decryption error:", e)
+    
+def dashboard_window(username):
+    dash=tkinter.Toplevel()
+    dash.title(f"Secure File Storage - {username}")
+    dash.geometry("300x200")
+
+    tkinter.Button(dash,text="Encrypt File",command=encrypt_file).pack(pady=10)
+    tkinter.Button(dash,text="Decrypt File",command=decrypt_file).pack(pady=10)
+
+def encrypt_file():
+       input_File=filedialog.askopenfilename(title="Select File to Encrypt")
+       if input_File:
+              password=simpledialog.askstring("Password","Enter Password for Encryption:",show='*') 
+              if password:
+               output_File=input_File+".enc"
+               encryption(input_File,output_File,password)
+               messagebox.showinfo("Success","File Encrypted Successfully!"+ output_File)
+              else:
+                messagebox.showerror("Error","Password is required for encryption!")
+       else:
+            messagebox.showerror("Error","No file selected for encryption!")
+
+def decrypt_file():
+        input_File=filedialog.askopenfilename(title="Select File to Decrypt")
+        if input_File:
+            password=simpledialog.askstring("password","Enter Password for Decryption:",show='*')
+            if password:
+                if input_File.endswith(".enc"):
+                    output_File=input_File[:-4]+".dec"
+                else:
+                    output_File=input_File+".dec"
+                decryption(input_File,output_File,password)
+                messagebox.showinfo("Success","File Decrypted Successfully!"+ output_File)
+            else:
+                messagebox.showerror("Error","Password is required for decryption!")
+        else:
+            messagebox.showerror("Error","No file selected for decryption!")  
+login_window()
