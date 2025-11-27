@@ -7,7 +7,7 @@ from Crypto.Random import get_random_bytes
 from Crypto.Util.Padding import pad, unpad
 from Crypto.Cipher import AES
 
-USERS_FILE = "user.text"
+USERS_FILE = "user.txt"
 
 def registration(username, password):
     if not username or not password:
@@ -19,7 +19,7 @@ def registration(username, password):
         user.write(username + "," + hashed_pass + "\n")  
     messagebox.showinfo("Success", "Registration Successful!")
     dashboard_window(username)
-     
+
 def authentication(username, password):
     if not os.path.exists(USERS_FILE):
         messagebox.showerror("Error", "No Users Registered Yet!")
@@ -43,8 +43,7 @@ def login_window():
             login.destroy()
             dashboard_window(username)
         else:
-            messagebox.showerror("Error", "Invalid credentials")
-
+         messagebox.showwarning("Registration Failed", "Please provide both username and password.")
     def open_register():
         register_window()
 
