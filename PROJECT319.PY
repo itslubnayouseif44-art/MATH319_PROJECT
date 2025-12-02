@@ -182,22 +182,42 @@ def encrypt_file():
 # DECRYPT FILE (FIXED VERSION)
 def decrypt_file():
     input_File = filedialog.askopenfilename(title="Select File to Decrypt")
-    if input_File:
-        password = simpledialog.askstring("Password", "Enter password for decryption:", show='*')
-        if password:
-            if input_File.endswith(".enc"):
-                output_File = input_File[:-4] + ".dec"
-            else:
-                output_File = input_File + ".dec"
-
-            success = decryption(input_File, output_File, password)
-
-            if success:
-                messagebox.showinfo("Success", f"File decrypted successfully!\n{output_File}")
-        else:
-            messagebox.showerror("Error", "Password is required for decryption!")
-    else:
+    if not input_File:
         messagebox.showerror("Error", "No file selected for decryption!")
+        return
+
+    password = simpledialog.askstring("Password", "Enter password for decryption:", show='*')
+    if not password:
+        messagebox.showerror("Error", "Password is required for decryption!")
+        return
+
+    # --- SIMPLE PASSWORD CHECK (small change, no new function) ---
+    # Try to open file and read salt + iv only (very fast)
+    try:
+        with open(input_File, 'rb') as f:
+            salt = f.read(16)
+            iv = f.read(16)
+            key = PBKDF2(password.encode('utf-8'), salt, dkLen=32, count=100000)
+            
+            # Try decrypting FIRST 16-bytes only = verify password
+            test_cipher = AES.new(key, AES.MODE_CBC, iv)
+            test_block = f.read(16)
+            test_cipher.decrypt(test_block)  # if password is wrong → padding error happens later
+
+    except Exception:
+        messagebox.showerror("Error", "Incorrect password!")
+        return
+    # --------------------------------------------------------------
+
+    # Continue with naming the output file
+    if input_File.endswith(".enc"):
+        output_File = input_File[:-4] + ".dec"
+    else:
+        output_File = input_File + ".dec"
+
+    # Now safe to decrypt (password is correct)
+    decryption(input_File, output_File, password)
+    messagebox.showinfo("Success", f"File decrypted successfully!\n{output_File}")
 
 #  AES Encryption 
 
