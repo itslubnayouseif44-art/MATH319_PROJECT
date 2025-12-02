@@ -226,7 +226,7 @@ def encryption(input_file, output_file, password):
 
 # Retrieval and Decryption  
 
-# FILE DECRYPTION  (returns True if successful, False if wrong password)
+#Decrypt files
 def decryption(input_file, output_file, password):
     try:
         with open(input_file, 'rb') as inputFile:
@@ -239,28 +239,42 @@ def decryption(input_file, output_file, password):
             key = PBKDF2(password.encode('utf-8'), salt, dkLen=32, count=100000)
             cipher = AES.new(key, AES.MODE_CBC, iv)
 
+           
+            test_block = inputFile.read(16)  # read 1 encrypted block
+
+            if len(test_block) < 16:
+                raise ValueError("Corrupted encrypted file!")
+
+            try:
+                # try decrypting + unpadding FIRST BLOCK ONLY
+                decrypted_test = cipher.decrypt(test_block)
+                unpad(decrypted_test, 16)  
+            except:
+                # wrong password → STOP!
+                messagebox.showerror("Error", "Incorrect password! Decryption stopped.")
+                return
+
+
+            # reopen file (because we consumed one block)
+            inputFile.seek(32)  # skip salt+iv
+
             with open(output_file, 'wb') as outputFile:
                 while True:
                     chunk = inputFile.read(4096)
                     if len(chunk) == 0:
                         break
-
+                    
                     decrypted_chunk = cipher.decrypt(chunk)
 
-                    # LAST CHUNK → try unpad inside TRY
                     if inputFile.tell() == os.path.getsize(input_file):
                         decrypted_chunk = unpad(decrypted_chunk, 16)
 
                     outputFile.write(decrypted_chunk)
 
-    except (ValueError, KeyError):
-        # WRONG PASSWORD, BAD PADDING, OR INVALID FILE
-        messagebox.showerror("Error", "Invalid password or corrupted file!")
-        if os.path.exists(output_file):
-            os.remove(output_file)
-
     except FileNotFoundError:
         messagebox.showerror("Error", "File not found!")
+    except ValueError as e:
+        messagebox.showerror("Error", f"Decryption failed: {e}")
 
 #  RUN LOGIN
 
