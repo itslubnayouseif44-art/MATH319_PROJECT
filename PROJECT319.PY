@@ -9,7 +9,7 @@ from Crypto.Cipher import AES
 
 USERS_FILE = "user.text"
 
-# _____________________________________ User Interface_______________________________________
+# User Interface
 
 # DASHBOARD WINDOW 
 def dashboard_window(username, parent_root):
@@ -34,7 +34,6 @@ def dashboard_window(username, parent_root):
                    font=("Arial", 12)).grid(row=1, column=0, padx=10, pady=10)
 
     def logout_action():
-       
         parent_root.deiconify()
 
     tkinter.Button(dash, text="Logout", width=12, command=logout_action,
@@ -53,9 +52,7 @@ def login_window():
         password = entry_pass.get()
         if authentication(username, password):
             messagebox.showinfo("Login Successful", f"Welcome, {username}!")
-           
             login.withdraw()
-            
             dashboard_window(username, login)
         else:
             messagebox.showwarning("Login Failed", "Incorrect username or password.")
@@ -90,7 +87,6 @@ def login_window():
     tkinter.Button(button_frame, text="Register", width=12, command=open_register,
                    bg="#F4165C", fg="white", font=("Arial", 12)).grid(row=0, column=1, padx=10)
 
-      
     def on_root_close():
         if messagebox.askokcancel("Quit", "Do you want to quit?"):
             login.destroy()
@@ -105,11 +101,9 @@ def register_window(parent_root):
         password = entry_pass.get()
         registration(username, password)
         if username and password:
-          register_win.destroy()
-          parent_root.withdraw()       
-          dashboard_window(username, parent_root)
-
-
+            register_win.destroy()
+            parent_root.withdraw()
+            dashboard_window(username, parent_root)
 
     register_win = tkinter.Toplevel()
     register_win.title("Secure File Storage - Register")
@@ -133,9 +127,7 @@ def register_window(parent_root):
     tkinter.Button(register_win, text="Register", width=15, command=register_action,
                    bg="#F4165C", fg="white", font=("Arial", 12)).pack(pady=15)
 
- 
-# _____________________________________ User Authentication _______________________________________
-
+# User Authentication 
 
 #  USER REGISTRATION
 def registration(username, password):
@@ -170,7 +162,7 @@ def authentication(username, password):
                 return True
     return False
 
-# _____________________________________ File Upload _______________________________________
+# File Upload 
 
 # ENCRYPT FILE 
 def encrypt_file():
@@ -197,13 +189,12 @@ def decrypt_file():
             else:
                 output_File = input_File + ".dec"
             decryption(input_File, output_File, password)
-            messagebox.showinfo("Success", f"File decrypted successfully!\n{output_File}")
         else:
             messagebox.showerror("Error", "Password is required for decryption!")
     else:
         messagebox.showerror("Error", "No file selected for decryption!")
 
-# _____________________________________  AES Encryption _______________________________________
+# AES Encryption 
 
 # FILE ENCRYPTION 
 def encryption(input_file, output_file, password):
@@ -228,12 +219,13 @@ def encryption(input_file, output_file, password):
     except FileNotFoundError:
         messagebox.showerror("Error", "File not found!")
 
-# _____________________________________  Retrieval and Decryption  _______________________________________
+# Retrieval and Decryption 
 
-# FILE DECRYPTION 
+# FILE DECRYPTION  (FIXED)
 def decryption(input_file, output_file, password):
     try:
-        with open(input_file,'rb') as inputFile:
+        with open(input_file, 'rb') as inputFile:
+
             salt = inputFile.read(16)
             iv = inputFile.read(16)
 
@@ -243,21 +235,31 @@ def decryption(input_file, output_file, password):
             key = PBKDF2(password.encode('utf-8'), salt, dkLen=32, count=100000)
             cipher = AES.new(key, AES.MODE_CBC, iv)
 
+            total_size = os.path.getsize(input_file)
+            payload_size = total_size - 32
+            processed_bytes = 0
+
             with open(output_file, 'wb') as outputFile:
                 while True:
                     chunk = inputFile.read(4096)
-                    if len(chunk) == 0:
+                    if not chunk:
                         break
+
+                    processed_bytes += len(chunk)
                     decrypted_chunk = cipher.decrypt(chunk)
-                    if inputFile.tell() == os.path.getsize(input_file):
+
+                    if processed_bytes == payload_size:
                         decrypted_chunk = unpad(decrypted_chunk, 16)
+
                     outputFile.write(decrypted_chunk)
-    except FileNotFoundError:
-        messagebox.showerror("Error", "File not found!")
+
+        messagebox.showinfo("Success", f"File decrypted successfully!\n{output_file}")
+
     except ValueError as e:
         messagebox.showerror("Error", f"Decryption failed: {e}")
+    except FileNotFoundError:
+        messagebox.showerror("Error", "File not found!")
 
-# _____________________________________ RUN LOGIN   _______________________________________
+# RUN LOGIN   
 
 login_window()
-
