@@ -101,9 +101,9 @@ def register_window(parent_root):
         password = entry_pass.get()
         registration(username, password)
         if username and password:
-            register_win.destroy()
-            parent_root.withdraw()
-            dashboard_window(username, parent_root)
+          register_win.destroy()
+          parent_root.withdraw()       
+          dashboard_window(username, parent_root)
 
     register_win = tkinter.Toplevel()
     register_win.title("Secure File Storage - Register")
@@ -126,6 +126,7 @@ def register_window(parent_root):
 
     tkinter.Button(register_win, text="Register", width=15, command=register_action,
                    bg="#F4165C", fg="white", font=("Arial", 12)).pack(pady=15)
+
 
 # User Authentication 
 
@@ -178,7 +179,7 @@ def encrypt_file():
     else:
         messagebox.showerror("Error", "No file selected for encryption!")
 
-# DECRYPT FILE 
+# DECRYPT FILE (FIXED VERSION)
 def decrypt_file():
     input_File = filedialog.askopenfilename(title="Select File to Decrypt")
     if input_File:
@@ -188,13 +189,17 @@ def decrypt_file():
                 output_File = input_File[:-4] + ".dec"
             else:
                 output_File = input_File + ".dec"
-            decryption(input_File, output_File, password)
+
+            success = decryption(input_File, output_File, password)
+
+            if success:
+                messagebox.showinfo("Success", f"File decrypted successfully!\n{output_File}")
         else:
             messagebox.showerror("Error", "Password is required for decryption!")
     else:
         messagebox.showerror("Error", "No file selected for decryption!")
 
-# AES Encryption 
+#  AES Encryption 
 
 # FILE ENCRYPTION 
 def encryption(input_file, output_file, password):
@@ -219,13 +224,12 @@ def encryption(input_file, output_file, password):
     except FileNotFoundError:
         messagebox.showerror("Error", "File not found!")
 
-# Retrieval and Decryption 
+# Retrieval and Decryption  
 
-# FILE DECRYPTION  (FIXED)
+# FILE DECRYPTION  (returns True if successful, False if wrong password)
 def decryption(input_file, output_file, password):
     try:
-        with open(input_file, 'rb') as inputFile:
-
+        with open(input_file,'rb') as inputFile:
             salt = inputFile.read(16)
             iv = inputFile.read(16)
 
@@ -235,31 +239,25 @@ def decryption(input_file, output_file, password):
             key = PBKDF2(password.encode('utf-8'), salt, dkLen=32, count=100000)
             cipher = AES.new(key, AES.MODE_CBC, iv)
 
-            total_size = os.path.getsize(input_file)
-            payload_size = total_size - 32
-            processed_bytes = 0
-
             with open(output_file, 'wb') as outputFile:
                 while True:
                     chunk = inputFile.read(4096)
-                    if not chunk:
+                    if len(chunk) == 0:
                         break
-
-                    processed_bytes += len(chunk)
                     decrypted_chunk = cipher.decrypt(chunk)
-
-                    if processed_bytes == payload_size:
+                    if inputFile.tell() == os.path.getsize(input_file):
                         decrypted_chunk = unpad(decrypted_chunk, 16)
-
                     outputFile.write(decrypted_chunk)
 
-        messagebox.showinfo("Success", f"File decrypted successfully!\n{output_file}")
+        return True
 
-    except ValueError as e:
-        messagebox.showerror("Error", f"Decryption failed: {e}")
+    except (ValueError, KeyError):
+        messagebox.showerror("Error", "Incorrect password or corrupted file!")
+        return False
     except FileNotFoundError:
         messagebox.showerror("Error", "File not found!")
+        return False
 
-# RUN LOGIN   
+#  RUN LOGIN
 
 login_window()
