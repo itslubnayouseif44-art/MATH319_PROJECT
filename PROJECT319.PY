@@ -229,7 +229,7 @@ def encryption(input_file, output_file, password):
 # FILE DECRYPTION  (returns True if successful, False if wrong password)
 def decryption(input_file, output_file, password):
     try:
-        with open(input_file,'rb') as inputFile:
+        with open(input_file, 'rb') as inputFile:
             salt = inputFile.read(16)
             iv = inputFile.read(16)
 
@@ -244,19 +244,23 @@ def decryption(input_file, output_file, password):
                     chunk = inputFile.read(4096)
                     if len(chunk) == 0:
                         break
+
                     decrypted_chunk = cipher.decrypt(chunk)
+
+                    # LAST CHUNK → try unpad inside TRY
                     if inputFile.tell() == os.path.getsize(input_file):
                         decrypted_chunk = unpad(decrypted_chunk, 16)
+
                     outputFile.write(decrypted_chunk)
 
-        return True
-
     except (ValueError, KeyError):
-        messagebox.showerror("Error", "Incorrect password or corrupted file!")
-        return False
+        # WRONG PASSWORD, BAD PADDING, OR INVALID FILE
+        messagebox.showerror("Error", "Invalid password or corrupted file!")
+        if os.path.exists(output_file):
+            os.remove(output_file)
+
     except FileNotFoundError:
         messagebox.showerror("Error", "File not found!")
-        return False
 
 #  RUN LOGIN
 
