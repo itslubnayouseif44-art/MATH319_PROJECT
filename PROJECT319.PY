@@ -9,7 +9,7 @@ from Crypto.Cipher import AES
 
 USERS_FILE = "user.text"
 
-# User Interface
+# _____________________________________ User Interface_______________________________________
 
 # DASHBOARD WINDOW 
 def dashboard_window(username, parent_root):
@@ -34,6 +34,7 @@ def dashboard_window(username, parent_root):
                    font=("Arial", 12)).grid(row=1, column=0, padx=10, pady=10)
 
     def logout_action():
+       
         parent_root.deiconify()
 
     tkinter.Button(dash, text="Logout", width=12, command=logout_action,
@@ -52,7 +53,9 @@ def login_window():
         password = entry_pass.get()
         if authentication(username, password):
             messagebox.showinfo("Login Successful", f"Welcome, {username}!")
+           
             login.withdraw()
+            
             dashboard_window(username, login)
         else:
             messagebox.showwarning("Login Failed", "Incorrect username or password.")
@@ -87,6 +90,7 @@ def login_window():
     tkinter.Button(button_frame, text="Register", width=12, command=open_register,
                    bg="#F4165C", fg="white", font=("Arial", 12)).grid(row=0, column=1, padx=10)
 
+      
     def on_root_close():
         if messagebox.askokcancel("Quit", "Do you want to quit?"):
             login.destroy()
@@ -104,6 +108,8 @@ def register_window(parent_root):
           register_win.destroy()
           parent_root.withdraw()       
           dashboard_window(username, parent_root)
+
+
 
     register_win = tkinter.Toplevel()
     register_win.title("Secure File Storage - Register")
@@ -127,8 +133,9 @@ def register_window(parent_root):
     tkinter.Button(register_win, text="Register", width=15, command=register_action,
                    bg="#F4165C", fg="white", font=("Arial", 12)).pack(pady=15)
 
+ 
+# _____________________________________ User Authentication _______________________________________
 
-# User Authentication 
 
 #  USER REGISTRATION
 def registration(username, password):
@@ -163,7 +170,7 @@ def authentication(username, password):
                 return True
     return False
 
-# File Upload 
+# _____________________________________ File Upload _______________________________________
 
 # ENCRYPT FILE 
 def encrypt_file():
@@ -179,47 +186,24 @@ def encrypt_file():
     else:
         messagebox.showerror("Error", "No file selected for encryption!")
 
-# DECRYPT FILE (FIXED VERSION)
+# DECRYPT FILE 
 def decrypt_file():
     input_File = filedialog.askopenfilename(title="Select File to Decrypt")
-    if not input_File:
-        messagebox.showerror("Error", "No file selected for decryption!")
-        return
-
-    password = simpledialog.askstring("Password", "Enter password for decryption:", show='*')
-    if not password:
-        messagebox.showerror("Error", "Password is required for decryption!")
-        return
-
-    # --- SIMPLE PASSWORD CHECK (small change, no new function) ---
-    # Try to open file and read salt + iv only (very fast)
-    try:
-        with open(input_File, 'rb') as f:
-            salt = f.read(16)
-            iv = f.read(16)
-            key = PBKDF2(password.encode('utf-8'), salt, dkLen=32, count=100000)
-            
-            # Try decrypting FIRST 16-bytes only = verify password
-            test_cipher = AES.new(key, AES.MODE_CBC, iv)
-            test_block = f.read(16)
-            test_cipher.decrypt(test_block)  # if password is wrong → padding error happens later
-
-    except Exception:
-        messagebox.showerror("Error", "Incorrect password!")
-        return
-    # --------------------------------------------------------------
-
-    # Continue with naming the output file
-    if input_File.endswith(".enc"):
-        output_File = input_File[:-4] + ".dec"
+    if input_File:
+        password = simpledialog.askstring("Password", "Enter password for decryption:", show='*')
+        if password:
+            if input_File.endswith(".enc"):
+                output_File = input_File[:-4] + ".dec"
+            else:
+                output_File = input_File + ".dec"
+            decryption(input_File, output_File, password)
+            messagebox.showinfo("Success", f"File decrypted successfully!\n{output_File}")
+        else:
+            messagebox.showerror("Error", "Password is required for decryption!")
     else:
-        output_File = input_File + ".dec"
+        messagebox.showerror("Error", "No file selected for decryption!")
 
-    # Now safe to decrypt (password is correct)
-    decryption(input_File, output_File, password)
-    messagebox.showinfo("Success", f"File decrypted successfully!\n{output_File}")
-
-#  AES Encryption 
+# _____________________________________  AES Encryption _______________________________________
 
 # FILE ENCRYPTION 
 def encryption(input_file, output_file, password):
@@ -244,12 +228,12 @@ def encryption(input_file, output_file, password):
     except FileNotFoundError:
         messagebox.showerror("Error", "File not found!")
 
-# Retrieval and Decryption  
+# _____________________________________  Retrieval and Decryption  _______________________________________
 
-#Decrypt files
+# FILE DECRYPTION 
 def decryption(input_file, output_file, password):
     try:
-        with open(input_file, 'rb') as inputFile:
+        with open(input_file,'rb') as inputFile:
             salt = inputFile.read(16)
             iv = inputFile.read(16)
 
@@ -259,43 +243,20 @@ def decryption(input_file, output_file, password):
             key = PBKDF2(password.encode('utf-8'), salt, dkLen=32, count=100000)
             cipher = AES.new(key, AES.MODE_CBC, iv)
 
-           
-            test_block = inputFile.read(16)  # read 1 encrypted block
-
-            if len(test_block) < 16:
-                raise ValueError("Corrupted encrypted file!")
-
-            try:
-                # try decrypting + unpadding FIRST BLOCK ONLY
-                decrypted_test = cipher.decrypt(test_block)
-                unpad(decrypted_test, 16)  
-            except:
-                # wrong password → STOP!
-                messagebox.showerror("Error", "Incorrect password! Decryption stopped.")
-                return
-
-
-            # reopen file (because we consumed one block)
-            inputFile.seek(32)  # skip salt+iv
-
             with open(output_file, 'wb') as outputFile:
                 while True:
                     chunk = inputFile.read(4096)
                     if len(chunk) == 0:
                         break
-                    
                     decrypted_chunk = cipher.decrypt(chunk)
-
                     if inputFile.tell() == os.path.getsize(input_file):
                         decrypted_chunk = unpad(decrypted_chunk, 16)
-
                     outputFile.write(decrypted_chunk)
-
     except FileNotFoundError:
         messagebox.showerror("Error", "File not found!")
     except ValueError as e:
         messagebox.showerror("Error", f"Decryption failed: {e}")
 
-#  RUN LOGIN
+# _____________________________________ RUN LOGIN   _______________________________________
 
 login_window()
