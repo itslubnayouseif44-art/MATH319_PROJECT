@@ -56,6 +56,7 @@ def login_window():
             dashboard_window(username, login)
         else:
             messagebox.showwarning("Login Failed", "Incorrect username or password.")
+            return open_register()
 
     def open_register():
         register_window(login)
@@ -103,6 +104,8 @@ def register_window(parent_root):
         if username and password:
             register_win.destroy()
             parent_root.withdraw()
+          #____________________________
+             
             dashboard_window(username, parent_root)
 
     register_win = tkinter.Toplevel()
@@ -134,12 +137,13 @@ def registration(username, password):
     if not username or not password:
         messagebox.showerror("Error", "You must complete all required information!")
         return
-
+    hashed_pass = hashlib.sha256(password.encode()).hexdigest()
     if os.path.exists(USERS_FILE):
         with open(USERS_FILE, "r") as user_file:
-            for line in user_file:
-                stored_username, _ = line.strip().split(",")
-                if username == stored_username:
+            for line in user_file: #edit here
+                stored_username, stored_pass = line.strip().split(",")
+
+                if username == stored_username and hashed_pass == stored_pass:
                     messagebox.showerror("Error", "Username already exists!")
                     return
 
