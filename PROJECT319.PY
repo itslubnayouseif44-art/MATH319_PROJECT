@@ -121,11 +121,13 @@ def register_window(parent_root):
     form_frame = tkinter.Frame(register_win, bg="#FFF8EF")
     form_frame.pack(pady=10)
 
-    tkinter.Label(form_frame, text="Username:", font=("Arial", 12), bg="#FFF8EF").grid(row=0, column=0, padx=5, pady=5, sticky="e")
+    tkinter.Label(form_frame, text="Username:", font=("Arial", 12), bg="#FFF8EF").grid(row=0, 
+    column=0, padx=5, pady=5, sticky="e")
     entry_user = tkinter.Entry(form_frame, font=("Arial", 12))
     entry_user.grid(row=0, column=1, padx=5, pady=5)
 
-    tkinter.Label(form_frame, text="Password:", font=("Arial", 12), bg="#FFF8EF").grid(row=1, column=0, padx=5, pady=5, sticky="e")
+    tkinter.Label(form_frame, text="Password:", font=("Arial", 12), bg="#FFF8EF").grid(row=1, 
+    column=0, padx=5, pady=5, sticky="e")
     entry_pass = tkinter.Entry(form_frame, show="*", font=("Arial", 12))
     entry_pass.grid(row=1, column=1, padx=5, pady=5)
 
