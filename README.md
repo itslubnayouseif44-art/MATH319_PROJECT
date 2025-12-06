@@ -9,6 +9,9 @@ The project focuses on connecting the theoretical ideas taught in the course wit
 🔎 Key cryptographic concepts used
 
 1.🔑 hash functions (SHA-256)
+
 2.🛡️ symmetric encryption (AES-based Fernet)
+
 3.🧬 key generation & management
+
 4.🔐 user authentication
